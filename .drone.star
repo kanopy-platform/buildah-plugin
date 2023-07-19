@@ -75,7 +75,7 @@ def build(name, arch, tag, publish):
         "pull": "always",
         "environment": {
             "GIT_COMMIT": "${DRONE_COMMIT_SHA:0:7}",
-            "PLUGIN_TYPE": "other",
+            "PLUGIN_TYPE": "drone",
         },
         "settings": {
             "repo": "${DRONE_REPO_NAME}",
