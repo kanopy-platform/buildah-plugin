@@ -1,4 +1,4 @@
-module github.com/kanopy-platform/multi-arch-images
+module github.com/kanopy-platform/buildah-plugin
 
 go 1.20
 
