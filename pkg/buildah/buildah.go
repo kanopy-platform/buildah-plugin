@@ -27,7 +27,7 @@ type (
 )
 
 func (b *Buildah) Exec() error {
-	log.Infof("Buildah struct: %+v", b)
+	log.Infof("Buildah struct: %+v", b) // TODO remove
 
 	var cmds []*exec.Cmd
 
