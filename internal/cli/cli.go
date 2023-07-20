@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kanopy-platform/buildah-plugin/internal/cli/drone"
 	"github.com/kanopy-platform/buildah-plugin/internal/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -23,19 +22,19 @@ func NewRootCommand() *cobra.Command {
 		RunE:              root.runE,
 	}
 
+	cmd.PersistentFlags().String("log-level", "info", "Configure log level")
+
 	cmd.AddCommand(newVersionCommand())
 
 	return cmd
 }
 
 func (c *RootCommand) persistentPreRunE(cmd *cobra.Command, args []string) error {
-	// add additional settings based on plugin type
-	switch version.Get().PluginType {
-	case version.PluginTypeDrone:
-		drone.AdditionalSetup()
-	default:
-		return fmt.Errorf("must specify a plugin type")
+	// additional settings based on plugin type
+	if err := pluginTypeSetup(); err != nil {
+		return err
 	}
+
 	// bind flags to viper
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
@@ -55,5 +54,18 @@ func (c *RootCommand) persistentPreRunE(cmd *cobra.Command, args []string) error
 }
 
 func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
+	log.Infof("To be implemented... log-level: %v", viper.GetString("log-level"))
+	return nil
+}
+
+func pluginTypeSetup() error {
+	pluginType := version.Get().PluginType
+	switch pluginType {
+	case version.PluginTypeDrone:
+		viper.SetEnvPrefix("PLUGIN")
+	default:
+		return fmt.Errorf("invalid plugin type: %q", pluginType)
+	}
+
 	return nil
 }

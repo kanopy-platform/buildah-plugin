@@ -1,0 +1,9 @@
+kind: pipeline
+name: default
+
+steps:
+- name: test buildah-plugin
+  image: registry.example.com/buildah-plugin
+  pull: if-not-exists
+  settings:
+    log_level: debug

@@ -8,7 +8,7 @@ var (
 	// these are set using ldflags
 	version    = "0.0.0"
 	gitCommit  = ""
-	pluginType = ""
+	pluginType = "drone"
 )
 
 type Info struct {
