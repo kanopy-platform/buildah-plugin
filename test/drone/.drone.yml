@@ -12,7 +12,9 @@ steps:
     registry: public.ecr.aws
     public_registry: true
     repo: kanopy/buildah-plugin
-    command: version
+    commands:
+    - version
+    - manifest
     manifest_sources:
     - git-1
     - git-2

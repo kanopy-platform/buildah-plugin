@@ -15,7 +15,7 @@ type (
 	Buildah struct {
 		Login    Login // configuration for "buildah login"
 		Repo     string
-		Command  string
+		Commands []string
 		Manifest manifest.CommandArgs
 	}
 
@@ -27,18 +27,20 @@ type (
 )
 
 func (b *Buildah) Exec() error {
-	log.Infof("Buildah struct: %+v", b) // TODO remove
+	log.Debugf("Buildah struct: %+v", b)
 
 	var cmds []*exec.Cmd
 
-	switch b.Command {
-	case version.Command:
-		v := version.CommandArgs{}
-		cmds = append(cmds, v.GetCmds()...)
-	case manifest.Command:
-		cmds = append(cmds, b.Manifest.GetCmds()...)
-	default:
-		return fmt.Errorf("invalid command: %q", b.Command)
+	for _, command := range b.Commands {
+		switch command {
+		case version.Command:
+			v := version.CommandArgs{}
+			cmds = append(cmds, v.GetCmds()...)
+		case manifest.Command:
+			cmds = append(cmds, b.Manifest.GetCmds()...)
+		default:
+			return fmt.Errorf("invalid command: %q", command)
+		}
 	}
 
 	for _, cmd := range cmds {

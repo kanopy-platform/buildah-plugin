@@ -30,7 +30,7 @@ func NewRootCommand() *cobra.Command {
 	cmd.PersistentFlags().String("registry", "", "ECR registry")
 	cmd.PersistentFlags().Bool("public-registry", false, "Public ECR registry")
 	cmd.PersistentFlags().String("repo", "", "The repository in the ECR registry")
-	cmd.PersistentFlags().String("command", "version", "The buildah command to run")
+	cmd.PersistentFlags().StringSlice("commands", []string{"version"}, "The buildah command to run")
 	addManifestCommandFlags(cmd)
 
 	cmd.AddCommand(newVersionCommand())
@@ -77,11 +77,11 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 			Username: "AWS",      // TODO use output from AWS ECR provider
 			Password: "password", // TODO use output from AWS ECR provider
 		},
-		Repo:    viper.GetString("repo"),
-		Command: viper.GetString("command"),
+		Repo:     viper.GetString("repo"),
+		Commands: delimitByComma(viper.GetStringSlice("commands")),
 		Manifest: manifest.CommandArgs{
-			Sources: viper.GetStringSlice("manifest-sources"),
-			Targets: viper.GetStringSlice("manifest-targets"),
+			Sources: delimitByComma(viper.GetStringSlice("manifest-sources")),
+			Targets: delimitByComma(viper.GetStringSlice("manifest-targets")),
 		},
 	}
 
@@ -99,4 +99,18 @@ func pluginTypeSetup() error {
 	}
 
 	return nil
+}
+
+// pflag StringSlice() delimits strings by comma but viper GetStringSlice() does not.
+// https://github.com/spf13/viper/issues/380
+// This behavior causes issues for environment variables. Example: ENV=test1,test2
+// This delimits the input by comma and returns the result
+func delimitByComma(stringSlice []string) []string {
+	var result []string
+
+	for _, s := range stringSlice {
+		result = append(result, strings.Split(s, ",")...)
+	}
+
+	return result
 }
