@@ -7,3 +7,15 @@ steps:
   pull: if-not-exists
   settings:
     log_level: debug
+    access_key: abc
+    secret_key: 123
+    registry: public.ecr.aws
+    public_registry: true
+    repo: kanopy/buildah-plugin
+    command: version
+    manifest_sources:
+    - git-1
+    - git-2
+    manifest_targets:
+    - git-1-2-combined
+    - git-1-2-combined-2
