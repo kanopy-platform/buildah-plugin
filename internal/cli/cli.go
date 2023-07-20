@@ -60,6 +60,7 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 
 func pluginTypeSetup() error {
 	pluginType := version.Get().PluginType
+
 	switch pluginType {
 	case version.PluginTypeDrone:
 		viper.SetEnvPrefix("PLUGIN")
