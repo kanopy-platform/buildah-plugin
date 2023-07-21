@@ -10,7 +10,6 @@ steps:
     access_key: abc
     secret_key: 123
     registry: public.ecr.aws
-    public_registry: true
     repo: kanopy/buildah-plugin
     commands:
     - version

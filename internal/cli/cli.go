@@ -28,7 +28,6 @@ func NewRootCommand() *cobra.Command {
 	cmd.PersistentFlags().String("access-key", "", "AWS Access Key for ECR authentication")
 	cmd.PersistentFlags().String("secret-key", "", "AWS Secret Key for ECR authentication")
 	cmd.PersistentFlags().String("registry", "", "ECR registry")
-	cmd.PersistentFlags().Bool("public-registry", false, "Public ECR registry")
 	cmd.PersistentFlags().String("repo", "", "The repository in the ECR registry")
 	cmd.PersistentFlags().StringSlice("commands", []string{"version"}, "The buildah command to run")
 	addManifestCommandFlags(cmd)
