@@ -27,8 +27,6 @@ type (
 )
 
 func (b *Buildah) Exec() error {
-	log.Debugf("Buildah struct: %+v", b)
-
 	var cmds []*exec.Cmd
 
 	for _, command := range b.Commands {

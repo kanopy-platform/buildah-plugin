@@ -68,7 +68,7 @@ func (c *RootCommand) persistentPreRunE(cmd *cobra.Command, args []string) error
 }
 
 func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
-	// TODO populate AWS ECR provider with auth credentials
+	// TODO get password from AWS ECR provider
 
 	buildah := buildah.Buildah{
 		Login: buildah.Login{
@@ -102,8 +102,8 @@ func pluginTypeSetup() error {
 
 // pflag StringSlice() delimits strings by comma but viper GetStringSlice() does not.
 // https://github.com/spf13/viper/issues/380
-// This behavior causes issues for environment variables. Example: ENV=test1,test2
-// This delimits the input by comma and returns the result
+// This causes issues for environment variables, example: ENV=test1,test2.
+// Delimit the input by commas and return the result.
 func delimitByComma(stringSlice []string) []string {
 	var result []string
 
