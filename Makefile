@@ -4,7 +4,6 @@ GIT_COMMIT := $(shell git rev-parse HEAD)
 PLUGIN_TYPE ?= drone
 REGISTRY_NAME ?= registry.example.com
 CONTAINER_RUNTIME ?= docker
-TLS_VERIFY ?= false
 
 RUN ?= .*
 PKG ?= ./...
