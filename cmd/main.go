@@ -1,7 +1,12 @@
 package main
 
-import log "github.com/sirupsen/logrus"
+import (
+	"github.com/kanopy-platform/buildah-plugin/internal/cli"
+	log "github.com/sirupsen/logrus"
+)
 
 func main() {
-	log.Println("To be implemented.")
+	if err := cli.NewRootCommand().Execute(); err != nil {
+		log.Fatalln(err)
+	}
 }

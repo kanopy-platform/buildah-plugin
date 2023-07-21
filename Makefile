@@ -1,9 +1,9 @@
 GO_MODULE := $(shell git config --get remote.origin.url | grep -o 'github\.com[:/][^.]*' | tr ':' '/')
 CMD_NAME := $(shell basename ${GO_MODULE})
 GIT_COMMIT := $(shell git rev-parse HEAD)
+PLUGIN_TYPE ?= drone
 REGISTRY_NAME ?= registry.example.com
 CONTAINER_RUNTIME ?= podman
-TLS_VERIFY ?= false
 
 RUN ?= .*
 PKG ?= ./...
@@ -25,12 +25,12 @@ tidy:
 
 .PHONY: local
 local:
-	${CONTAINER_RUNTIME} build --build-arg GIT_COMMIT=${GIT_COMMIT} -t $(CMD_NAME):latest .
+	${CONTAINER_RUNTIME} build --build-arg GIT_COMMIT=${GIT_COMMIT} --build-arg PLUGIN_TYPE=${PLUGIN_TYPE} -t ${REGISTRY_NAME}/$(CMD_NAME):latest .
 
 .PHONY: local-run
 local-run: local ## Build and run the application in a local container
-	${CONTAINER_RUNTIME} push ${REGISTRY_NAME}/$(CMD_NAME):latest --tls-verify=${TLS_VERIFY}
-	${CONTAINER_RUNTIME} run $(CMD_NAME):latest
+	${CONTAINER_RUNTIME} push ${REGISTRY_NAME}/$(CMD_NAME):latest
+	${CONTAINER_RUNTIME} run ${REGISTRY_NAME}/$(CMD_NAME):latest
 
 .PHONY: help
 help:
