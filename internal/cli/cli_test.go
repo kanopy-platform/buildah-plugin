@@ -13,11 +13,11 @@ func TestCleanEnvVarSlice(t *testing.T) {
 		input []string
 		want  []string
 	}{
-		"one-element-multiple-values": {
+		"one element multiple values": {
 			input: []string{"value1,value2"},
 			want:  []string{"value1", "value2"},
 		},
-		"multiple-elements": {
+		"multiple elements": {
 			input: []string{"value1", "value2,value3"},
 			want:  []string{"value1", "value2", "value3"},
 		},
