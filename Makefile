@@ -3,7 +3,7 @@ CMD_NAME := $(shell basename ${GO_MODULE})
 GIT_COMMIT := $(shell git rev-parse HEAD)
 PLUGIN_TYPE ?= drone
 REGISTRY_NAME ?= registry.example.com
-CONTAINER_RUNTIME ?= podman
+CONTAINER_RUNTIME ?= docker
 
 RUN ?= .*
 PKG ?= ./...

@@ -8,7 +8,7 @@ RUN go mod download
 COPY . .
 RUN go build -ldflags="-X 'github.com/kanopy-platform/buildah-plugin/internal/version.version=${VERSION}' -X 'github.com/kanopy-platform/buildah-plugin/internal/version.gitCommit=${GIT_COMMIT}' -X 'github.com/kanopy-platform/buildah-plugin/internal/version.pluginType=${PLUGIN_TYPE}'" -o /go/bin/app ./cmd/
 
-FROM debian:bookworm-slim
+FROM quay.io/buildah/stable:v1.31.0
 RUN groupadd -r app && useradd --no-log-init -r -g app app
 USER app
 COPY --from=build /go/bin/app /
