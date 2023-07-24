@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kanopy-platform/buildah-plugin/internal/version"
+	buildversion "github.com/kanopy-platform/buildah-plugin/internal/version"
 	"github.com/kanopy-platform/buildah-plugin/pkg/buildah"
 	"github.com/kanopy-platform/buildah-plugin/pkg/buildah/manifest"
+	"github.com/kanopy-platform/buildah-plugin/pkg/buildah/version"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -29,10 +30,8 @@ func NewRootCommand() *cobra.Command {
 	cmd.PersistentFlags().String("secret-key", "", "AWS Secret Key for ECR authentication")
 	cmd.PersistentFlags().String("registry", "", "ECR registry")
 	cmd.PersistentFlags().String("repo", "", "The repository in the ECR registry")
-	cmd.PersistentFlags().StringSlice("commands", []string{"version"}, "The buildah command to run")
+	cmd.PersistentFlags().Bool("print-version", false, "Prints plugin and buildah version for debugging")
 	addManifestCommandFlags(cmd)
-
-	cmd.AddCommand(newVersionCommand())
 
 	return cmd
 }
@@ -68,6 +67,10 @@ func (c *RootCommand) persistentPreRunE(cmd *cobra.Command, args []string) error
 }
 
 func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
+	if viper.GetBool("print-version") {
+		log.Infof("%#v\n", buildversion.Get())
+	}
+
 	// TODO get password from AWS ECR provider
 
 	buildah := buildah.Buildah{
@@ -76,11 +79,13 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 			Username: "AWS",      // TODO use output from AWS ECR provider
 			Password: "password", // TODO use output from AWS ECR provider
 		},
-		Repo:     viper.GetString("repo"),
-		Commands: delimitByComma(viper.GetStringSlice("commands")),
+		Repo: viper.GetString("repo"),
+		Version: version.CommandArgs{
+			PrintVersion: viper.GetBool("print-version"),
+		},
 		Manifest: manifest.CommandArgs{
-			Sources: delimitByComma(viper.GetStringSlice("manifest-sources")),
-			Targets: delimitByComma(viper.GetStringSlice("manifest-targets")),
+			Sources: cleanEnvVarSlice(viper.GetStringSlice("manifest-sources")),
+			Targets: cleanEnvVarSlice(viper.GetStringSlice("manifest-targets")),
 		},
 	}
 
@@ -88,10 +93,10 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 }
 
 func pluginTypeSetup() error {
-	pluginType := version.Get().PluginType
+	pluginType := buildversion.Get().PluginType
 
 	switch pluginType {
-	case version.PluginTypeDrone:
+	case buildversion.PluginTypeDrone:
 		viper.SetEnvPrefix("PLUGIN")
 	default:
 		return fmt.Errorf("invalid plugin type: %q", pluginType)
@@ -104,7 +109,7 @@ func pluginTypeSetup() error {
 // https://github.com/spf13/viper/issues/380
 // This causes issues for environment variables, example: ENV=test1,test2.
 // Delimit the input by commas and return the result.
-func delimitByComma(stringSlice []string) []string {
+func cleanEnvVarSlice(stringSlice []string) []string {
 	var result []string
 
 	for _, s := range stringSlice {

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDelimitByComma(t *testing.T) {
+func TestCleanEnvVarSlice(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
@@ -26,7 +26,7 @@ func TestDelimitByComma(t *testing.T) {
 	for name, test := range tests {
 		t.Log(name)
 
-		result := delimitByComma(test.input)
+		result := cleanEnvVarSlice(test.input)
 		assert.Equal(t, test.want, result)
 	}
 }

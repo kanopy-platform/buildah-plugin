@@ -1,7 +1,6 @@
 package buildah
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -15,7 +14,7 @@ type (
 	Buildah struct {
 		Login    Login // configuration for "buildah login"
 		Repo     string
-		Commands []string
+		Version  version.CommandArgs
 		Manifest manifest.CommandArgs
 	}
 
@@ -29,17 +28,13 @@ type (
 func (b *Buildah) Exec() error {
 	var cmds []*exec.Cmd
 
-	for _, command := range b.Commands {
-		switch command {
-		case version.Command:
-			v := version.CommandArgs{}
-			cmds = append(cmds, v.GetCmds()...)
-		case manifest.Command:
-			cmds = append(cmds, b.Manifest.GetCmds()...)
-		default:
-			return fmt.Errorf("invalid command: %q", command)
-		}
+	cmds = append(cmds, b.Version.GetCmds()...)
+
+	manifestCmds, err := b.Manifest.GetCmds()
+	if err != nil {
+		return err
 	}
+	cmds = append(cmds, manifestCmds...)
 
 	for _, cmd := range cmds {
 		cmd.Stdout = os.Stdout

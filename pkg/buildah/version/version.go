@@ -11,11 +11,17 @@ const (
 )
 
 type (
-	CommandArgs struct{}
+	CommandArgs struct {
+		PrintVersion bool
+	}
 )
 
 func (c *CommandArgs) GetCmds() []*exec.Cmd {
-	return []*exec.Cmd{
-		exec.Command(common.BuildahCmd, Command),
+	if c.PrintVersion {
+		return []*exec.Cmd{
+			exec.Command(common.BuildahCmd, Command),
+		}
 	}
+
+	return []*exec.Cmd{}
 }
