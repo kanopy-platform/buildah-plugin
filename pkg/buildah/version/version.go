@@ -12,12 +12,12 @@ const (
 
 type (
 	CommandArgs struct {
-		PrintVersion bool
+		Print bool `json:"print"`
 	}
 )
 
 func (c *CommandArgs) GetCmds() []*exec.Cmd {
-	if c.PrintVersion {
+	if c.Print {
 		return []*exec.Cmd{
 			exec.Command(common.BuildahCmd, Command),
 		}

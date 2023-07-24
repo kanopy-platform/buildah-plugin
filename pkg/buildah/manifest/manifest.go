@@ -12,8 +12,8 @@ const (
 
 type (
 	CommandArgs struct {
-		Sources []string
-		Targets []string
+		Sources []string `json:"sources"`
+		Targets []string `json:"targets"`
 	}
 )
 
@@ -42,11 +42,11 @@ func (c *CommandArgs) isManifestCmd() (bool, error) {
 	var err error
 
 	if len(c.Sources) == 0 {
-		err = errors.Join(err, fmt.Errorf("manifest command: manifest_sources must be specified"))
+		err = errors.Join(err, fmt.Errorf("manifest command: sources must be specified"))
 	}
 
 	if len(c.Targets) == 0 {
-		err = errors.Join(err, fmt.Errorf("manifest command: manifest_targets must be specified"))
+		err = errors.Join(err, fmt.Errorf("manifest command: targets must be specified"))
 	}
 
 	return true, err
