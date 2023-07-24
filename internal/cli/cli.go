@@ -74,13 +74,8 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 
 	var errs error
 
-	if err := unmarshalIfExists("version", &buildah.Version); err != nil {
-		errs = errors.Join(errs, err)
-	}
-
-	if err := unmarshalIfExists("manifest", &buildah.Manifest); err != nil {
-		errs = errors.Join(errs, err)
-	}
+	errs = errors.Join(errs, unmarshalIfExists("version", &buildah.Version))
+	errs = errors.Join(errs, unmarshalIfExists("manifest", &buildah.Manifest))
 
 	if errs != nil {
 		return errs
