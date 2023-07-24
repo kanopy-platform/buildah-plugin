@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -71,8 +72,19 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 		Repo: viper.GetString("repo"),
 	}
 
-	json.Unmarshal([]byte(viper.GetString("version")), &buildah.Version)
-	json.Unmarshal([]byte(viper.GetString("manifest")), &buildah.Manifest)
+	var errs error
+
+	if err := unmarshalIfExists("version", &buildah.Version); err != nil {
+		errs = errors.Join(errs, err)
+	}
+
+	if err := unmarshalIfExists("manifest", &buildah.Manifest); err != nil {
+		errs = errors.Join(errs, err)
+	}
+
+	if errs != nil {
+		return errs
+	}
 
 	if buildah.Version.Print {
 		log.Infof("%#v\n", buildversion.Get())
@@ -94,16 +106,12 @@ func pluginTypeSetup() error {
 	return nil
 }
 
-// pflag StringSlice() delimits strings by comma but viper GetStringSlice() does not.
-// https://github.com/spf13/viper/issues/380
-// This causes issues for environment variables, example: ENV=test1,test2.
-// Delimit the input by commas and return the result.
-func cleanEnvVarSlice(stringSlice []string) []string {
-	var result []string
-
-	for _, s := range stringSlice {
-		result = append(result, strings.Split(s, ",")...)
+// If the value for key exists, unmarshal it into the struct v
+func unmarshalIfExists(key string, v any) error {
+	data := viper.GetString(key)
+	if data == "" {
+		return nil
 	}
 
-	return result
+	return json.Unmarshal([]byte(data), v)
 }

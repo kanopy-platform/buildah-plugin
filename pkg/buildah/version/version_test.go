@@ -18,13 +18,13 @@ func TestGetCmds(t *testing.T) {
 	}{
 		"printVersion=false": {
 			args: CommandArgs{
-				PrintVersion: false,
+				Print: false,
 			},
 			wantCmds: []string{},
 		},
 		"printVersion=true": {
 			args: CommandArgs{
-				PrintVersion: true,
+				Print: true,
 			},
 			wantCmds: []string{fmt.Sprintf("%s %s", common.BuildahCmd, Command)},
 		},

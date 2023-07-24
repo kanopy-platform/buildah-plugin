@@ -3,30 +3,47 @@ package cli
 import (
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCleanEnvVarSlice(t *testing.T) {
+func TestUnmarshalIfExists(t *testing.T) {
 	t.Parallel()
 
+	type testStruct struct {
+		Age        int    `json:"age"`
+		Occupation string `json:"occupation"`
+	}
+
 	tests := map[string]struct {
-		input []string
-		want  []string
+		input   string
+		want    testStruct
+		wantErr bool
 	}{
-		"one element multiple values": {
-			input: []string{"value1,value2"},
-			want:  []string{"value1", "value2"},
+		"successfully populate struct": {
+			input: "{\"age\":40,\"occupation\":\"chef\"}",
+			want: testStruct{
+				Age:        40,
+				Occupation: "chef",
+			},
+			wantErr: false,
 		},
-		"multiple elements": {
-			input: []string{"value1", "value2,value3"},
-			want:  []string{"value1", "value2", "value3"},
+		"input is empty": {
+			input:   "",
+			want:    testStruct{},
+			wantErr: false,
 		},
 	}
 
 	for name, test := range tests {
 		t.Log(name)
 
-		result := cleanEnvVarSlice(test.input)
-		assert.Equal(t, test.want, result)
+		s := testStruct{}
+		viper.Set("testKey", test.input)
+
+		err := unmarshalIfExists("testKey", &s)
+		t.Log(err)
+		assert.Equal(t, test.wantErr, err != nil)
+		assert.Equal(t, test.want, s)
 	}
 }
