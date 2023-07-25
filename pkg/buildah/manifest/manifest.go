@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+
+	"github.com/kanopy-platform/buildah-plugin/pkg/buildah/common"
 )
 
 const (
@@ -29,7 +31,10 @@ func (c *CommandArgs) GetCmds() ([]*exec.Cmd, error) {
 		return cmds, nil
 	}
 
-	// TODO add commands to run
+	// TODO replace with actual manifest commands. Currently is just for testing credentials work.
+	cmds = append(cmds,
+		exec.Command(common.BuildahCmd, "pull", c.Sources[0]),
+	)
 
 	return cmds, nil
 }

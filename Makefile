@@ -27,9 +27,12 @@ tidy:
 local:
 	${CONTAINER_RUNTIME} build --build-arg GIT_COMMIT=${GIT_COMMIT} --build-arg PLUGIN_TYPE=${PLUGIN_TYPE} -t ${REGISTRY_NAME}/$(CMD_NAME):latest .
 
-.PHONY: local-run
-local-run: local ## Build and run the application in a local container
+.PHONY: local-push
+local-push: local
 	${CONTAINER_RUNTIME} push ${REGISTRY_NAME}/$(CMD_NAME):latest
+
+.PHONY: local-run
+local-run: local-push ## Build and run the application in a local container
 	${CONTAINER_RUNTIME} run ${REGISTRY_NAME}/$(CMD_NAME):latest
 
 .PHONY: help

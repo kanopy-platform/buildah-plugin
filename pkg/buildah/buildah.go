@@ -12,16 +12,9 @@ import (
 
 type (
 	Buildah struct {
-		Login    Login // configuration for "buildah login"
 		Repo     string
 		Version  version.CommandArgs
 		Manifest manifest.CommandArgs
-	}
-
-	Login struct {
-		Registry string
-		Username string
-		Password string
 	}
 )
 
