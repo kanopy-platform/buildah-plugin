@@ -16,15 +16,8 @@ RUN wget -O /docker-credential-ecr-login https://amazon-ecr-credential-helper-re
 RUN chmod +x /docker-credential-ecr-login
 
 FROM quay.io/buildah/stable:v1.31.0
-RUN groupadd -r app && useradd --no-log-init -r -g app app
-# Add ranges needed for buildah commands
-# RUN usermod --add-subuids 10000-65536 app
-# RUN usermod --add-subgids 10000-65536 app
-# Create directory needed to store credentials
-ENV HOME=/buildah
-RUN mkdir -m 777 -p $HOME/.docker
-RUN chown -R app $HOME
-USER app
+USER build
+RUN mkdir -p /home/build/.docker
 COPY --from=ecr-login /docker-credential-ecr-login /usr/bin/
 COPY --from=build /go/bin/app /
 ENTRYPOINT ["/app"]

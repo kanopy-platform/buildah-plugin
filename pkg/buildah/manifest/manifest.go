@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
-
-	"github.com/kanopy-platform/buildah-plugin/pkg/buildah/common"
 )
 
 const (
@@ -31,13 +29,7 @@ func (c *CommandArgs) GetCmds() ([]*exec.Cmd, error) {
 		return cmds, nil
 	}
 
-	// TODO replace with actual manifest commands. Currently is just testing that credentials work.
-	cmds = append(cmds,
-		exec.Command(common.BuildahCmd, "manifest", "create", "--storage-driver=vfs", "public.ecr.aws/kanopy/buildah-plugin:multiarchtest2"),
-		exec.Command(common.BuildahCmd, "manifest", "add", "--storage-driver=vfs", "public.ecr.aws/kanopy/buildah-plugin:multiarchtest2", "public.ecr.aws/kanopy/buildah-plugin:git-3afa39c-arm64"),
-		exec.Command(common.BuildahCmd, "manifest", "add", "--storage-driver=vfs", "public.ecr.aws/kanopy/buildah-plugin:multiarchtest2", "public.ecr.aws/kanopy/buildah-plugin:git-3afa39c-amd64"),
-		exec.Command(common.BuildahCmd, "manifest", "push", "--storage-driver=vfs", "--all", "public.ecr.aws/kanopy/buildah-plugin:multiarchtest2"),
-	)
+	// TODO add commands to run.
 
 	return cmds, nil
 }
