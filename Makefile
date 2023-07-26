@@ -2,6 +2,7 @@ GO_MODULE := $(shell git config --get remote.origin.url | grep -o 'github\.com[:
 CMD_NAME := $(shell basename ${GO_MODULE})
 GIT_COMMIT := $(shell git rev-parse HEAD)
 PLUGIN_TYPE ?= drone
+ARCH ?= "amd64"
 REGISTRY_NAME ?= registry.example.com
 CONTAINER_RUNTIME ?= docker
 

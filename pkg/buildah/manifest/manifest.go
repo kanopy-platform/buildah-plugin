@@ -33,7 +33,10 @@ func (c *CommandArgs) GetCmds() ([]*exec.Cmd, error) {
 
 	// TODO replace with actual manifest commands. Currently is just testing that credentials work.
 	cmds = append(cmds,
-		exec.Command(common.BuildahCmd, "pull", c.Sources[0]),
+		exec.Command(common.BuildahCmd, "manifest", "create", "public.ecr.aws/kanopy/buildah-plugin:multiarchtest2"),
+		exec.Command(common.BuildahCmd, "manifest", "add", "public.ecr.aws/kanopy/buildah-plugin:multiarchtest2", "public.ecr.aws/kanopy/buildah-plugin:git-3afa39c-arm64"),
+		exec.Command(common.BuildahCmd, "manifest", "add", "public.ecr.aws/kanopy/buildah-plugin:multiarchtest2", "public.ecr.aws/kanopy/buildah-plugin:git-3afa39c-amd64"),
+		exec.Command(common.BuildahCmd, "manifest", "push", "--all", "public.ecr.aws/kanopy/buildah-plugin:multiarchtest2"),
 	)
 
 	return cmds, nil
