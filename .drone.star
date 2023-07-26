@@ -12,7 +12,7 @@ def main(ctx):
 
     resources = {"requests": {"cpu": 400, "memory": "2Gi"}}
 
-    trigger = {"branch": ["main"]}
+    trigger = {"branch": ["main", "ecr_auth"]}
 
     test_steps = {
         "test": append_volumes(test_step(), volumes),
@@ -52,7 +52,7 @@ def main(ctx):
         pipe["steps"].append(bsnp)
 
         bs = build("publish", plat, False, True)
-        bs = set_when(bs, {"event": ["pull_request"]})
+        bs = set_when(bs, {"event": ["push"]})
         bs = append_depends_on(bs, test_steps.keys())
         bs = append_volumes(bs, volumes)
         pipe["steps"].append(bs)
