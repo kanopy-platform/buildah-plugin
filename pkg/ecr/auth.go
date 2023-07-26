@@ -44,7 +44,7 @@ func CreateDockerConfig(accessKey, secretKey, registry string) (*docker.Config, 
 		return nil, fmt.Errorf("failed to set %s environment variable: %v", secretKeyEnv, err)
 	}
 
-	// uses the amazon-ecr-credential-helper credential helper
+	// uses the amazon-ecr-credential-helper
 	dockerConfig.SetCredHelper(registry, "ecr-login")
 
 	return dockerConfig, nil

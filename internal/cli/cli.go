@@ -63,21 +63,7 @@ func (c *RootCommand) persistentPreRunE(cmd *cobra.Command, args []string) error
 }
 
 func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
-	dockerConfig, err := ecr.CreateDockerConfig(
-		viper.GetString("access-key"),
-		viper.GetString("secret-key"),
-		viper.GetString("registry"),
-	)
-	if err != nil {
-		return err
-	}
-
-	jsonBytes, err := json.Marshal(dockerConfig)
-	if err != nil {
-		return err
-	}
-
-	if err := os.WriteFile("/buildah/.docker/config.json", jsonBytes, 0600); err != nil {
+	if err := setupDockerConfig(); err != nil {
 		return err
 	}
 
@@ -122,4 +108,28 @@ func unmarshalIfExists(key string, v any) error {
 	}
 
 	return json.Unmarshal([]byte(data), v)
+}
+
+func setupDockerConfig() error {
+	dockerConfig, err := ecr.CreateDockerConfig(
+		viper.GetString("access-key"),
+		viper.GetString("secret-key"),
+		viper.GetString("registry"),
+	)
+	if err != nil {
+		return err
+	}
+
+	jsonBytes, err := json.Marshal(dockerConfig)
+	if err != nil {
+		return err
+	}
+
+	configFilePath := fmt.Sprintf("%s/.docker/config.json", os.Getenv("HOME"))
+
+	if err := os.WriteFile(configFilePath, jsonBytes, 0600); err != nil {
+		return err
+	}
+
+	return nil
 }

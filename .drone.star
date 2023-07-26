@@ -52,7 +52,7 @@ def main(ctx):
         pipe["steps"].append(bsnp)
 
         bs = build("publish", plat, False, True)
-        bs = set_when(bs, {"event": ["push"]})
+        bs = set_when(bs, {"event": ["pull_request"]})
         bs = append_depends_on(bs, test_steps.keys())
         bs = append_volumes(bs, volumes)
         pipe["steps"].append(bs)

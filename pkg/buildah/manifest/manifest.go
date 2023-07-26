@@ -31,7 +31,7 @@ func (c *CommandArgs) GetCmds() ([]*exec.Cmd, error) {
 		return cmds, nil
 	}
 
-	// TODO replace with actual manifest commands. Currently is just for testing credentials work.
+	// TODO replace with actual manifest commands. Currently is just testing that credentials work.
 	cmds = append(cmds,
 		exec.Command(common.BuildahCmd, "pull", c.Sources[0]),
 	)

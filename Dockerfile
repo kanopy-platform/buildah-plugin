@@ -19,6 +19,6 @@ ENV HOME=/buildah
 RUN mkdir -m 777 -p $HOME/.docker
 RUN chown -R app $HOME
 USER app
-COPY --from=build /go/bin/app /
 COPY --from=build /go/bin/docker-credential-ecr-login /usr/bin/
+COPY --from=build /go/bin/app /
 ENTRYPOINT ["/app"]
