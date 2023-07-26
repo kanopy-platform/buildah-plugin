@@ -12,6 +12,8 @@ def main(ctx):
 
     resources = {"requests": {"cpu": 400, "memory": "2Gi"}}
 
+    trigger = {"branch": ["**/*"]}
+
     test_steps = {
         "test": append_volumes(test_step(), volumes),
     }
