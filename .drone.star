@@ -12,7 +12,7 @@ def main(ctx):
 
     resources = {"requests": {"cpu": 400, "memory": "2Gi"}}
 
-    trigger = {"branch": ["main"]}
+    trigger = {"branch": ["**/*"]}
 
     test_steps = {
         "test": append_volumes(test_step(), volumes),
@@ -76,12 +76,14 @@ def build(name, arch, tag, publish):
         "environment": {
             "GIT_COMMIT": "${DRONE_COMMIT_SHA:0:7}",
             "PLUGIN_TYPE": "drone",
+            "ARCH": arch,
         },
         "settings": {
             "repo": "${DRONE_REPO_NAME}",
             "build_args": [
                 "GIT_COMMIT",
                 "PLUGIN_TYPE",
+                "ARCH",
             ],
             "tags": [
                 "git-${DRONE_COMMIT_SHA:0:7}-" + arch,

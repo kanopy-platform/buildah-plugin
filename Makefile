@@ -2,6 +2,7 @@ GO_MODULE := $(shell git config --get remote.origin.url | grep -o 'github\.com[:
 CMD_NAME := $(shell basename ${GO_MODULE})
 GIT_COMMIT := $(shell git rev-parse HEAD)
 PLUGIN_TYPE ?= drone
+ARCH ?= "amd64"
 REGISTRY_NAME ?= registry.example.com
 CONTAINER_RUNTIME ?= docker
 
@@ -27,9 +28,12 @@ tidy:
 local:
 	${CONTAINER_RUNTIME} build --build-arg GIT_COMMIT=${GIT_COMMIT} --build-arg PLUGIN_TYPE=${PLUGIN_TYPE} -t ${REGISTRY_NAME}/$(CMD_NAME):latest .
 
-.PHONY: local-run
-local-run: local ## Build and run the application in a local container
+.PHONY: local-push
+local-push: local
 	${CONTAINER_RUNTIME} push ${REGISTRY_NAME}/$(CMD_NAME):latest
+
+.PHONY: local-run
+local-run: local-push ## Build and run the application in a local container
 	${CONTAINER_RUNTIME} run ${REGISTRY_NAME}/$(CMD_NAME):latest
 
 .PHONY: help

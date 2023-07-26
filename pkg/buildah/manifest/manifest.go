@@ -29,7 +29,7 @@ func (c *CommandArgs) GetCmds() ([]*exec.Cmd, error) {
 		return cmds, nil
 	}
 
-	// TODO add commands to run
+	// TODO add commands to run.
 
 	return cmds, nil
 }

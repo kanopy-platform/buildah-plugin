@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	buildversion "github.com/kanopy-platform/buildah-plugin/internal/version"
 	"github.com/kanopy-platform/buildah-plugin/pkg/buildah"
+	"github.com/kanopy-platform/buildah-plugin/pkg/ecr"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -61,14 +63,11 @@ func (c *RootCommand) persistentPreRunE(cmd *cobra.Command, args []string) error
 }
 
 func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
-	// TODO get password from AWS ECR provider
+	if err := setupDockerConfig(); err != nil {
+		return err
+	}
 
 	buildah := buildah.Buildah{
-		Login: buildah.Login{
-			Registry: viper.GetString("registry"),
-			Username: "AWS",      // TODO use output from AWS ECR provider
-			Password: "password", // TODO use output from AWS ECR provider
-		},
 		Repo: viper.GetString("repo"),
 	}
 
@@ -109,4 +108,28 @@ func unmarshalIfExists(key string, v any) error {
 	}
 
 	return json.Unmarshal([]byte(data), v)
+}
+
+func setupDockerConfig() error {
+	dockerConfig, err := ecr.CreateDockerConfig(
+		viper.GetString("access-key"),
+		viper.GetString("secret-key"),
+		viper.GetString("registry"),
+	)
+	if err != nil {
+		return err
+	}
+
+	jsonBytes, err := json.Marshal(dockerConfig)
+	if err != nil {
+		return err
+	}
+
+	configFilePath := fmt.Sprintf("%s/.docker/config.json", os.Getenv("HOME"))
+
+	if err := os.WriteFile(configFilePath, jsonBytes, 0600); err != nil {
+		return err
+	}
+
+	return nil
 }
