@@ -12,7 +12,7 @@ def main(ctx):
 
     resources = {"requests": {"cpu": 400, "memory": "2Gi"}}
 
-    trigger = {"branch": ["main", "ecr_auth"]}
+    trigger = {"branch": ["main"]}
 
     test_steps = {
         "test": append_volumes(test_step(), volumes),
