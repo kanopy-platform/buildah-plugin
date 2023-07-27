@@ -26,7 +26,7 @@ func TestGetCmds(t *testing.T) {
 			args: CommandArgs{
 				Print: true,
 			},
-			wantCmds: []string{fmt.Sprintf("%s %s", common.BuildahCmd, Command)},
+			wantCmds: []string{fmt.Sprintf("%s %s", common.BuildahCmd, versionCommand)},
 		},
 	}
 

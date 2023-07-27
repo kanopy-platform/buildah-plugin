@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	Command = "version"
+	versionCommand = "version"
 )
 
 type (
@@ -19,7 +19,7 @@ type (
 func (c *CommandArgs) GetCmds() []*exec.Cmd {
 	if c.Print {
 		return []*exec.Cmd{
-			exec.Command(common.BuildahCmd, Command),
+			exec.Command(common.BuildahCmd, versionCommand),
 		}
 	}
 

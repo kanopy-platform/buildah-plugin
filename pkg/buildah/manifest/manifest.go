@@ -4,10 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+
+	"github.com/kanopy-platform/buildah-plugin/pkg/buildah/common"
 )
 
 const (
-	Command = "manifest"
+	manifestCommand        = "manifest"
+	storageDriverOptionVfs = "--storage-driver=vfs"
 )
 
 type (
@@ -18,20 +21,16 @@ type (
 )
 
 func (c *CommandArgs) GetCmds() ([]*exec.Cmd, error) {
-	cmds := []*exec.Cmd{}
-
 	addCmds, err := c.isManifestCmd()
 	if err != nil {
-		return cmds, err
+		return nil, err
 	}
 
 	if !addCmds {
-		return cmds, nil
+		return nil, nil
 	}
 
-	// TODO add commands to run.
-
-	return cmds, nil
+	return manifestCommands(c.Sources, c.Targets), nil
 }
 
 func (c *CommandArgs) isManifestCmd() (bool, error) {
@@ -50,4 +49,20 @@ func (c *CommandArgs) isManifestCmd() (bool, error) {
 	}
 
 	return true, err
+}
+
+func manifestCommands(sources, targets []string) []*exec.Cmd {
+	cmds := []*exec.Cmd{}
+
+	for _, target := range targets {
+		cmds = append(cmds, exec.Command(common.BuildahCmd, manifestCommand, "create", storageDriverOptionVfs, target))
+
+		for _, source := range sources {
+			cmds = append(cmds, exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, target, source))
+		}
+
+		cmds = append(cmds, exec.Command(common.BuildahCmd, manifestCommand, "push", storageDriverOptionVfs, "--all", target))
+	}
+
+	return cmds
 }
