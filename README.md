@@ -10,7 +10,7 @@ To build a multi-architecture image, see the following .drone.yml pipeline snipp
 ```
 steps:
 - name: manifest
-  image: public.ecr.aws/kanopy/buildah-plugin:latest-amd64
+  image: public.ecr.aws/kanopy/buildah-plugin:v0.1.0-amd64
   pull: always
   settings:
     registry:
