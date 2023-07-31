@@ -9,6 +9,7 @@ import (
 
 	buildversion "github.com/kanopy-platform/buildah-plugin/internal/version"
 	"github.com/kanopy-platform/buildah-plugin/pkg/buildah"
+	"github.com/kanopy-platform/buildah-plugin/pkg/buildah/manifest"
 	"github.com/kanopy-platform/buildah-plugin/pkg/ecr"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -69,6 +70,10 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 
 	buildah := buildah.Buildah{
 		Repo: viper.GetString("repo"),
+		Manifest: manifest.CommandArgs{
+			Registry: viper.GetString("registry"),
+			Repo:     viper.GetString("repo"),
+		},
 	}
 
 	var errs error

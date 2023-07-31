@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"path"
 
 	"github.com/kanopy-platform/buildah-plugin/pkg/buildah/common"
 )
@@ -15,8 +16,10 @@ const (
 
 type (
 	CommandArgs struct {
-		Sources []string `json:"sources"`
-		Targets []string `json:"targets"`
+		Registry string
+		Repo     string
+		Sources  []string `json:"sources"`
+		Targets  []string `json:"targets"`
 	}
 )
 
@@ -30,15 +33,26 @@ func (c *CommandArgs) GetCmds() ([]*exec.Cmd, error) {
 		return nil, nil
 	}
 
-	return manifestCommands(c.Sources, c.Targets), nil
+	return c.manifestCommands(), nil
 }
 
 func (c *CommandArgs) isManifestCmd() (bool, error) {
-	if len(c.Sources) == 0 && len(c.Targets) == 0 {
+	if c.Registry == "" &&
+		c.Repo == "" &&
+		len(c.Sources) == 0 &&
+		len(c.Targets) == 0 {
 		return false, nil
 	}
 
 	var err error
+
+	if c.Registry == "" {
+		err = errors.Join(err, fmt.Errorf("manifest command: registry must be specified"))
+	}
+
+	if c.Repo == "" {
+		err = errors.Join(err, fmt.Errorf("manifest command: repo must be specified"))
+	}
 
 	if len(c.Sources) == 0 {
 		err = errors.Join(err, fmt.Errorf("manifest command: sources must be specified"))
@@ -51,13 +65,18 @@ func (c *CommandArgs) isManifestCmd() (bool, error) {
 	return true, err
 }
 
-func manifestCommands(sources, targets []string) []*exec.Cmd {
+func (c *CommandArgs) manifestCommands() []*exec.Cmd {
 	cmds := []*exec.Cmd{}
 
-	for _, target := range targets {
+	registryRepo := path.Join(c.Registry, c.Repo)
+
+	for _, targetTag := range c.Targets {
+		target := fmt.Sprintf("%s:%s", registryRepo, targetTag)
+
 		cmds = append(cmds, exec.Command(common.BuildahCmd, manifestCommand, "create", storageDriverOptionVfs, target))
 
-		for _, source := range sources {
+		for _, sourceTag := range c.Sources {
+			source := fmt.Sprintf("%s:%s", registryRepo, sourceTag)
 			cmds = append(cmds, exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, target, source))
 		}
 

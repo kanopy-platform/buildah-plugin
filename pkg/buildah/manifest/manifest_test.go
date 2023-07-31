@@ -23,22 +23,28 @@ func TestIsManifestCmd(t *testing.T) {
 		},
 		"all required args exist": {
 			args: CommandArgs{
-				Sources: []string{"a"},
-				Targets: []string{"b"},
+				Registry: "a",
+				Repo:     "b",
+				Sources:  []string{"a"},
+				Targets:  []string{"b"},
 			},
 			wantResult: true,
 			wantErr:    false,
 		},
 		"missing sources": {
 			args: CommandArgs{
-				Targets: []string{"b"},
+				Registry: "a",
+				Repo:     "b",
+				Targets:  []string{"b"},
 			},
 			wantResult: true,
 			wantErr:    true,
 		},
 		"missing targets": {
 			args: CommandArgs{
-				Sources: []string{"a"},
+				Registry: "a",
+				Repo:     "b",
+				Sources:  []string{"a"},
 			},
 			wantResult: true,
 			wantErr:    true,
@@ -58,24 +64,27 @@ func TestManifestCommands(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		sources  []string
-		targets  []string
-		wantCmds []*exec.Cmd
+		commandArgs CommandArgs
+		wantCmds    []*exec.Cmd
 	}{
 		"multiple sources, multiple targets": {
-			sources: []string{"a", "b"},
-			targets: []string{"1", "2"},
+			commandArgs: CommandArgs{
+				Registry: "public.ecr.aws",
+				Repo:     "devops",
+				Sources:  []string{"a", "b"},
+				Targets:  []string{"1", "2"},
+			},
 			wantCmds: []*exec.Cmd{
 				// target 1
-				exec.Command(common.BuildahCmd, manifestCommand, "create", storageDriverOptionVfs, "1"),
-				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "1", "a"),
-				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "1", "b"),
-				exec.Command(common.BuildahCmd, manifestCommand, "push", storageDriverOptionVfs, "--all", "1"),
+				exec.Command(common.BuildahCmd, manifestCommand, "create", storageDriverOptionVfs, "public.ecr.aws/devops:1"),
+				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "public.ecr.aws/devops:1", "public.ecr.aws/devops:a"),
+				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "public.ecr.aws/devops:1", "public.ecr.aws/devops:b"),
+				exec.Command(common.BuildahCmd, manifestCommand, "push", storageDriverOptionVfs, "--all", "public.ecr.aws/devops:1"),
 				// target 2
-				exec.Command(common.BuildahCmd, manifestCommand, "create", storageDriverOptionVfs, "2"),
-				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "2", "a"),
-				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "2", "b"),
-				exec.Command(common.BuildahCmd, manifestCommand, "push", storageDriverOptionVfs, "--all", "2"),
+				exec.Command(common.BuildahCmd, manifestCommand, "create", storageDriverOptionVfs, "public.ecr.aws/devops:2"),
+				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "public.ecr.aws/devops:2", "public.ecr.aws/devops:a"),
+				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "public.ecr.aws/devops:2", "public.ecr.aws/devops:b"),
+				exec.Command(common.BuildahCmd, manifestCommand, "push", storageDriverOptionVfs, "--all", "public.ecr.aws/devops:2"),
 			},
 		},
 	}
@@ -83,7 +92,7 @@ func TestManifestCommands(t *testing.T) {
 	for name, test := range tests {
 		t.Log(name)
 
-		result := manifestCommands(test.sources, test.targets)
+		result := test.commandArgs.manifestCommands()
 		assert.Equal(t, test.wantCmds, result)
 	}
 }
