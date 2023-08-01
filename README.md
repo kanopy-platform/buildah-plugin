@@ -5,7 +5,7 @@ This is a Drone compatible plugin that executes [buildah](https://github.com/con
 ### Multi-architecture image
 To build a multi-architecture image, see the following .drone.yml pipeline snippet.
 - `registry` and `repo` specify the repo path.
-- `sources` are the image tags that support a single architecture.
+- `sources` are the image tags that support a single architecture. The tags in sources must already exist on the repo.
 - `targets` are the resulting image tags supporting multiple architectures.
 ```
 steps:
