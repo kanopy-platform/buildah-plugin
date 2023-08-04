@@ -150,12 +150,14 @@ def manifest(name, platforms, tag):
     }
 
     if tag:
-        step["image"] = imageRepo + ":" + get_tag_name("arm64")
+        # step["image"] = imageRepo + ":" + get_tag_name("arm64")
+        step["image"] = imageRepo + ":" + "v0.1.0-arm64"
         for platform in platforms:
             step["settings"]["manifest"]["sources"].append(get_tag_name(platform))
         step["settings"]["manifest"]["targets"].append(get_tag_name())
     else:
-        step["image"] = imageRepo + ":" + get_commit_name("arm64")
+        # step["image"] = imageRepo + ":" + get_commit_name("arm64")
+        step["image"] = imageRepo + ":" + "v0.1.0-arm64"
         for platform in platforms:
             step["settings"]["manifest"]["sources"].append(get_commit_name(platform))
         step["settings"]["manifest"]["targets"].append(get_commit_name())
