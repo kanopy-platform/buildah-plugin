@@ -73,19 +73,15 @@ def main(ctx):
         "resources": resources,
         "steps": [],
         "trigger": trigger,
-        "volumes": volumes,
-        "workspace": workspace,
         "depends_on": platforms,
     }
     
     manifestStepCommit = manifest("manifest-commit", platforms, False)
     manifestStepCommit = set_when(manifestStepCommit, {"event": ["push"]})
-    manifestStepCommit = append_volumes(manifestStepCommit, volumes)
     manifest_pipeline["steps"].append(manifestStepCommit)
 
     manifestStepTag = manifest("manifest-tag", platforms, True)
     manifestStepTag = set_when(manifestStepTag, {"event": ["tag"]})
-    manifestStepTag = append_volumes(manifestStepTag, volumes)
     manifest_pipeline["steps"].append(manifestStepTag)
 
     pipelines.append(manifest_pipeline)
@@ -150,14 +146,12 @@ def manifest(name, platforms, tag):
     }
 
     if tag:
-        # step["image"] = imageRepo + ":" + get_tag_name("arm64")
-        step["image"] = imageRepo + ":" + "v0.1.0-arm64"
+        step["image"] = imageRepo + ":" + get_tag_name("arm64")
         for platform in platforms:
             step["settings"]["manifest"]["sources"].append(get_tag_name(platform))
         step["settings"]["manifest"]["targets"].append(get_tag_name())
     else:
-        # step["image"] = imageRepo + ":" + get_commit_name("arm64")
-        step["image"] = imageRepo + ":" + "v0.1.0-arm64"
+        step["image"] = imageRepo + ":" + get_commit_name("arm64")
         for platform in platforms:
             step["settings"]["manifest"]["sources"].append(get_commit_name(platform))
         step["settings"]["manifest"]["targets"].append(get_commit_name())
