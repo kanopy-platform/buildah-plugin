@@ -66,7 +66,7 @@ def main(ctx):
         pipelines.append(pipe)
 
     manifest_pipeline = {
-       "kind": "pipeline",
+        "kind": "pipeline",
         "type": "kubernetes",
         "name": "multi-arch",
         "platform": {"arch": "arm64"},
