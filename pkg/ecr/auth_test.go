@@ -14,6 +14,9 @@ func TestCreateDockerConfig(t *testing.T) {
 	testDockerConfig := docker.NewConfig()
 	testDockerConfig.SetCredHelper("hello.com", "ecr-login")
 
+	publicDockerConfig := docker.NewConfig()
+	publicDockerConfig.SetCredHelper("public.ecr.aws", "ecr-login")
+
 	tests := map[string]struct {
 		accessKey string
 		secretKey string
@@ -30,6 +33,12 @@ func TestCreateDockerConfig(t *testing.T) {
 			registry:  "hello.com",
 			want:      testDockerConfig,
 		},
+		"clean public registry": {
+			accessKey: "access",
+			secretKey: "secret",
+			registry:  "public.ecr.aws/kanopy",
+			want:      publicDockerConfig,
+		},
 	}
 
 	for name, test := range tests {
@@ -43,5 +52,34 @@ func TestCreateDockerConfig(t *testing.T) {
 			assert.Equal(t, test.accessKey, os.Getenv(accessKeyEnv))
 			assert.Equal(t, test.secretKey, os.Getenv(secretKeyEnv))
 		}
+	}
+}
+
+func TestCleanRegistryName(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		registry string
+		want     string
+	}{
+		"public registry, remove suffix": {
+			registry: "public.ecr.aws/kanopy",
+			want:     "public.ecr.aws",
+		},
+		"public registry, no suffix": {
+			registry: "public.ecr.aws",
+			want:     "public.ecr.aws",
+		},
+		"private registry, leave as is": {
+			registry: "hello.com/kanopy",
+			want:     "hello.com/kanopy",
+		},
+	}
+
+	for name, test := range tests {
+		t.Log(name)
+
+		result := cleanRegistryName(test.registry)
+		assert.Equal(t, test.want, result)
 	}
 }
