@@ -65,8 +65,28 @@ def main(ctx):
 
         pipelines.append(pipe)
 
-    return pipelines
+    manifest_pipeline = {
+        "kind": "pipeline",
+        "type": "kubernetes",
+        "name": "multi-arch",
+        "platform": {"arch": "arm64"},
+        "resources": resources,
+        "steps": [],
+        "trigger": trigger,
+        "depends_on": platforms,
+    }
+    
+    manifestStepCommit = manifest("manifest-commit", platforms, False)
+    manifestStepCommit = set_when(manifestStepCommit, {"event": ["push"]})
+    manifest_pipeline["steps"].append(manifestStepCommit)
 
+    manifestStepTag = manifest("manifest-tag", platforms, True)
+    manifestStepTag = set_when(manifestStepTag, {"event": ["tag"]})
+    manifest_pipeline["steps"].append(manifestStepTag)
+
+    pipelines.append(manifest_pipeline)
+
+    return pipelines
 
 def build(name, arch, tag, publish):
     step = {
@@ -86,15 +106,15 @@ def build(name, arch, tag, publish):
                 "ARCH",
             ],
             "tags": [
-                "git-${DRONE_COMMIT_SHA:0:7}-" + arch,
+                get_commit_name(arch),
             ],
             "create_repository": True,
         },
     }
 
     if tag:
-        step["settings"]["tags"].append("${DRONE_TAG}-" + arch)
-        step["environment"]["VERSION"] = "${DRONE_TAG}-" + arch
+        step["settings"]["tags"].append(get_tag_name(arch))
+        step["environment"]["VERSION"] = get_tag_name(arch)
         step["settings"]["build_args"].append("VERSION")
     else:
         step["settings"]["tags"].append("latest-" + arch)
@@ -108,6 +128,35 @@ def build(name, arch, tag, publish):
 
     return step
 
+def manifest(name, platforms, tag):
+    imageRepo = "public.ecr.aws/kanopy/buildah-plugin"
+
+    step = {
+        "name": name,
+        "settings": {
+            "registry": {"from_secret": "ecr_registry"},
+            "repo": "${DRONE_REPO_NAME}",
+            "access_key": {"from_secret": "ecr_access_key"},
+            "secret_key": {"from_secret": "ecr_secret_key"},
+            "manifest": {
+                "sources": [],
+                "targets": [],
+            },
+        },
+    }
+
+    if tag:
+        step["image"] = imageRepo + ":" + get_tag_name("arm64")
+        for platform in platforms:
+            step["settings"]["manifest"]["sources"].append(get_tag_name(platform))
+        step["settings"]["manifest"]["targets"].append(get_tag_name())
+    else:
+        step["image"] = imageRepo + ":" + get_commit_name("arm64")
+        for platform in platforms:
+            step["settings"]["manifest"]["sources"].append(get_commit_name(platform))
+        step["settings"]["manifest"]["targets"].append(get_commit_name())
+
+    return step
 
 def test_step():
     return {
@@ -152,3 +201,15 @@ def append_depends_on(step, refs):
 
     step["depends_on"] = deps
     return step
+
+def get_commit_name(arch=""):
+    if arch:
+        return "git-${DRONE_COMMIT_SHA:0:7}-" + arch
+    
+    return "git-${DRONE_COMMIT_SHA:0:7}"
+
+def get_tag_name(arch=""):
+    if arch:
+        return "${DRONE_TAG}-" + arch
+    
+    return "${DRONE_TAG}"

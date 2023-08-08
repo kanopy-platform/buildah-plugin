@@ -4,13 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/kanopy-platform/buildah-plugin/pkg/docker"
 )
 
 const (
-	accessKeyEnv string = "AWS_ACCESS_KEY_ID"
-	secretKeyEnv string = "AWS_SECRET_ACCESS_KEY"
+	accessKeyEnv    string = "AWS_ACCESS_KEY_ID"
+	secretKeyEnv    string = "AWS_SECRET_ACCESS_KEY"
+	ecrPublicDomain string = "public.ecr.aws"
 )
 
 func CreateDockerConfig(accessKey, secretKey, registry string) (*docker.Config, error) {
@@ -45,7 +47,15 @@ func CreateDockerConfig(accessKey, secretKey, registry string) (*docker.Config, 
 	}
 
 	// uses the amazon-ecr-credential-helper
-	dockerConfig.SetCredHelper(registry, "ecr-login")
+	dockerConfig.SetCredHelper(cleanRegistryName(registry), "ecr-login")
 
 	return dockerConfig, nil
+}
+
+func cleanRegistryName(registry string) string {
+	if strings.HasPrefix(registry, ecrPublicDomain) {
+		return ecrPublicDomain
+	}
+
+	return registry
 }
