@@ -27,3 +27,14 @@ steps:
       targets:
       - git-${DRONE_COMMIT_SHA:0:7}
 ```
+
+### Output
+After each `targets` tag is pushed, the plugin prints a tag reference and a
+digest reference for the resulting manifest to stdout. Each is printed as
+its own full, independently pullable image reference (rather than a single
+combined `tag@digest` string), since `registry` and/or `repo` may be sourced
+from a Drone secret and partially redacted in plugin output:
+```
+tag: public.ecr.aws/kanopy/devops/myrepo:git-abc1234
+digest: public.ecr.aws/kanopy/devops/myrepo@sha256:1234abcd...
+```
