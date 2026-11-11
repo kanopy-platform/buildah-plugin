@@ -1,11 +1,11 @@
 package manifest
 
 import (
-	"os/exec"
+	"os"
 	"testing"
 
-	"github.com/kanopy-platform/buildah-plugin/pkg/buildah/common"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsManifestCmd(t *testing.T) {
@@ -65,7 +65,8 @@ func TestManifestCommands(t *testing.T) {
 
 	tests := map[string]struct {
 		commandArgs CommandArgs
-		wantCmds    []*exec.Cmd
+		wantRepo    string
+		wantTags    []string
 	}{
 		"multiple sources, multiple targets": {
 			commandArgs: CommandArgs{
@@ -74,17 +75,10 @@ func TestManifestCommands(t *testing.T) {
 				Sources:  []string{"a", "b"},
 				Targets:  []string{"1", "2"},
 			},
-			wantCmds: []*exec.Cmd{
-				// target 1
-				exec.Command(common.BuildahCmd, manifestCommand, "create", storageDriverOptionVfs, "public.ecr.aws/devops:1"),
-				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "public.ecr.aws/devops:1", "public.ecr.aws/devops:a"),
-				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "public.ecr.aws/devops:1", "public.ecr.aws/devops:b"),
-				exec.Command(common.BuildahCmd, manifestCommand, "push", storageDriverOptionVfs, "--all", "public.ecr.aws/devops:1"),
-				// target 2
-				exec.Command(common.BuildahCmd, manifestCommand, "create", storageDriverOptionVfs, "public.ecr.aws/devops:2"),
-				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "public.ecr.aws/devops:2", "public.ecr.aws/devops:a"),
-				exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, "public.ecr.aws/devops:2", "public.ecr.aws/devops:b"),
-				exec.Command(common.BuildahCmd, manifestCommand, "push", storageDriverOptionVfs, "--all", "public.ecr.aws/devops:2"),
+			wantRepo: "public.ecr.aws/devops",
+			wantTags: []string{
+				"public.ecr.aws/devops:1",
+				"public.ecr.aws/devops:2",
 			},
 		},
 	}
@@ -92,7 +86,64 @@ func TestManifestCommands(t *testing.T) {
 	for name, test := range tests {
 		t.Log(name)
 
-		result := test.commandArgs.manifestCommands()
-		assert.Equal(t, test.wantCmds, result)
+		args := test.commandArgs
+		cmds, err := args.manifestCommands()
+		require.NoError(t, err)
+		defer args.Cleanup()
+
+		// 1 create + 2 add + 1 push per target
+		wantLen := len(test.wantTags) * (1 + len(args.Sources) + 1)
+		assert.Len(t, cmds, wantLen)
+
+		digests := args.Digests()
+		require.Len(t, digests, len(test.wantTags))
+
+		cmdsPerTarget := 1 + len(args.Sources) + 1
+
+		for i, tag := range test.wantTags {
+			assert.Equal(t, tag, digests[i].Tag)
+			// Repo is the image reference without a tag or digest, used to
+			// build a valid "repo@digest" reference for the pushed digest.
+			assert.Equal(t, test.wantRepo, digests[i].Repo)
+			assert.NotEmpty(t, digests[i].DigestFile)
+
+			// the digest file should have been created on disk
+			_, err := os.Stat(digests[i].DigestFile)
+			assert.NoError(t, err)
+
+			// the push command for this target should reference the same
+			// digest file via --digestfile
+			pushCmd := cmds[(i+1)*cmdsPerTarget-1]
+			assert.Contains(t, pushCmd.Args, "--digestfile")
+			assert.Contains(t, pushCmd.Args, digests[i].DigestFile)
+			assert.Contains(t, pushCmd.Args, tag)
+		}
 	}
+}
+
+func TestDigestsCleanup(t *testing.T) {
+	t.Parallel()
+
+	args := CommandArgs{
+		Registry: "public.ecr.aws",
+		Repo:     "devops",
+		Sources:  []string{"a"},
+		Targets:  []string{"1"},
+	}
+
+	_, err := args.manifestCommands()
+	require.NoError(t, err)
+
+	digests := args.Digests()
+	require.Len(t, digests, 1)
+
+	// digest file exists prior to cleanup
+	_, err = os.Stat(digests[0].DigestFile)
+	require.NoError(t, err)
+
+	args.Cleanup()
+
+	// digest file is removed after cleanup
+	_, err = os.Stat(digests[0].DigestFile)
+	assert.True(t, os.IsNotExist(err))
 }
