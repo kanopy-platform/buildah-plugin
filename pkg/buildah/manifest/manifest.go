@@ -24,6 +24,14 @@ type (
 		Sources  []string `json:"sources"`
 		Targets  []string `json:"targets"`
 
+		// Workspace is the directory digest files are created in. It
+		// should be set to the plugin's workspace directory (e.g. Drone's
+		// workspace mount) rather than left to default to the OS temp
+		// directory, since the plugin's runtime environment is not
+		// guaranteed to have a writable system tmp dir. If unset, it
+		// falls back to the current working directory.
+		Workspace string
+
 		digests []TargetDigest
 	}
 
@@ -104,6 +112,11 @@ func (c *CommandArgs) manifestCommands() ([]*exec.Cmd, error) {
 
 	registryRepo := path.Join(c.Registry, c.Repo)
 
+	digestDir, err := c.digestDir()
+	if err != nil {
+		return nil, fmt.Errorf("manifest command: determining digest file directory: %w", err)
+	}
+
 	for _, targetTag := range c.Targets {
 		target := fmt.Sprintf("%s:%s", registryRepo, targetTag)
 
@@ -114,7 +127,7 @@ func (c *CommandArgs) manifestCommands() ([]*exec.Cmd, error) {
 			cmds = append(cmds, exec.Command(common.BuildahCmd, manifestCommand, "add", storageDriverOptionVfs, target, source))
 		}
 
-		digestFile, err := os.CreateTemp("", digestFileNamePattern)
+		digestFile, err := os.CreateTemp(digestDir, digestFileNamePattern)
 		if err != nil {
 			return nil, fmt.Errorf("manifest command: creating digest file for %q: %w", target, err)
 		}
@@ -129,4 +142,14 @@ func (c *CommandArgs) manifestCommands() ([]*exec.Cmd, error) {
 	}
 
 	return cmds, nil
+}
+
+// digestDir returns the directory digest files should be created in: the
+// configured Workspace, or the current working directory if unset.
+func (c *CommandArgs) digestDir() (string, error) {
+	if c.Workspace != "" {
+		return c.Workspace, nil
+	}
+
+	return os.Getwd()
 }

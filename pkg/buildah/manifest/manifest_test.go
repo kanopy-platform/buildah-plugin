@@ -157,7 +157,13 @@ func TestManifestCommandsDefaultsToWorkingDirectory(t *testing.T) {
 
 	// with no Workspace configured, the digest file must still land in the
 	// current working directory rather than the OS temp directory.
-	assert.Equal(t, workspace, filepath.Dir(digests[0].DigestFile))
+	// filepath.EvalSymlinks normalizes any symlinked tmp dirs (e.g. macOS's
+	// /var -> /private/var) so the comparison isn't platform-dependent.
+	wantDir, err := filepath.EvalSymlinks(workspace)
+	require.NoError(t, err)
+	gotDir, err := filepath.EvalSymlinks(filepath.Dir(digests[0].DigestFile))
+	require.NoError(t, err)
+	assert.Equal(t, wantDir, gotDir)
 }
 
 func TestDigestsCleanup(t *testing.T) {
