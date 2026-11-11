@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -63,6 +64,8 @@ func TestIsManifestCmd(t *testing.T) {
 func TestManifestCommands(t *testing.T) {
 	t.Parallel()
 
+	workspace := t.TempDir()
+
 	tests := map[string]struct {
 		commandArgs CommandArgs
 		wantRepo    string
@@ -70,10 +73,11 @@ func TestManifestCommands(t *testing.T) {
 	}{
 		"multiple sources, multiple targets": {
 			commandArgs: CommandArgs{
-				Registry: "public.ecr.aws",
-				Repo:     "devops",
-				Sources:  []string{"a", "b"},
-				Targets:  []string{"1", "2"},
+				Registry:  "public.ecr.aws",
+				Repo:      "devops",
+				Sources:   []string{"a", "b"},
+				Targets:   []string{"1", "2"},
+				Workspace: workspace,
 			},
 			wantRepo: "public.ecr.aws/devops",
 			wantTags: []string{
@@ -107,6 +111,12 @@ func TestManifestCommands(t *testing.T) {
 			assert.Equal(t, test.wantRepo, digests[i].Repo)
 			assert.NotEmpty(t, digests[i].DigestFile)
 
+			// the digest file must be created inside the configured
+			// workspace directory rather than the OS temp directory, since
+			// the plugin's runtime environment is not guaranteed to have a
+			// writable system tmp dir.
+			assert.Equal(t, workspace, filepath.Dir(digests[i].DigestFile))
+
 			// the digest file should have been created on disk
 			_, err := os.Stat(digests[i].DigestFile)
 			assert.NoError(t, err)
@@ -121,14 +131,44 @@ func TestManifestCommands(t *testing.T) {
 	}
 }
 
-func TestDigestsCleanup(t *testing.T) {
-	t.Parallel()
+func TestManifestCommandsDefaultsToWorkingDirectory(t *testing.T) {
+	// not run in parallel: changes the process-wide working directory
+	workspace := t.TempDir()
+
+	origWd, err := os.Getwd()
+	require.NoError(t, err)
+	require.NoError(t, os.Chdir(workspace))
+	defer func() { require.NoError(t, os.Chdir(origWd)) }()
 
 	args := CommandArgs{
 		Registry: "public.ecr.aws",
 		Repo:     "devops",
 		Sources:  []string{"a"},
 		Targets:  []string{"1"},
+		// Workspace intentionally left unset
+	}
+
+	_, err = args.manifestCommands()
+	require.NoError(t, err)
+	defer args.Cleanup()
+
+	digests := args.Digests()
+	require.Len(t, digests, 1)
+
+	// with no Workspace configured, the digest file must still land in the
+	// current working directory rather than the OS temp directory.
+	assert.Equal(t, workspace, filepath.Dir(digests[0].DigestFile))
+}
+
+func TestDigestsCleanup(t *testing.T) {
+	t.Parallel()
+
+	args := CommandArgs{
+		Registry:  "public.ecr.aws",
+		Repo:      "devops",
+		Sources:   []string{"a"},
+		Targets:   []string{"1"},
+		Workspace: t.TempDir(),
 	}
 
 	_, err := args.manifestCommands()
