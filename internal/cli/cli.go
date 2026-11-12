@@ -73,6 +73,12 @@ func (c *RootCommand) runE(cmd *cobra.Command, args []string) error {
 		Manifest: manifest.CommandArgs{
 			Registry: viper.GetString("registry"),
 			Repo:     viper.GetString("repo"),
+			// Anchor manifest digest files in Drone's workspace directory
+			// rather than the OS temp directory, since the plugin's
+			// runtime environment is not guaranteed to have a writable
+			// system tmp dir. manifest.CommandArgs falls back to the
+			// current working directory if this is empty.
+			Workspace: os.Getenv("DRONE_WORKSPACE"),
 		},
 	}
 
