@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y wget
 RUN wget -O /docker-credential-ecr-login https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/${ECR_LOGIN_VERSION}/linux-${ARCH}/docker-credential-ecr-login
 RUN chmod +x /docker-credential-ecr-login
 
-FROM quay.io/buildah/stable:v1.31.0
+FROM quay.io/buildah/stable:v1.45.1
 USER build
 RUN mkdir -p /home/build/.docker
 COPY --from=ecr-login /docker-credential-ecr-login /usr/bin/
