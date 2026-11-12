@@ -1,10 +1,6 @@
 def main(ctx):
     platforms = ["amd64", "arm64"]
 
-    # TEMPORARY: publish a stable "preview" tag for end-to-end validation of
-    # this branch's image via the drone-e2e-test repo. Revert before merge.
-    preview_tag = "ecr-login-v0.12.0-preview"
-
     volumes = [
         {
             "name": "cache",
@@ -59,7 +55,6 @@ def main(ctx):
         bs = set_when(bs, {"event": ["push"]})
         bs = append_depends_on(bs, test_steps.keys())
         bs = append_volumes(bs, volumes)
-        bs["settings"]["tags"].append(preview_tag + "-" + plat)
         pipe["steps"].append(bs)
 
         bstp = build("publish-tag", plat, True, True)
@@ -88,12 +83,6 @@ def main(ctx):
     manifestStepTag = manifest("manifest-tag", platforms, True)
     manifestStepTag = set_when(manifestStepTag, {"event": ["tag"]})
     manifest_pipeline["steps"].append(manifestStepTag)
-
-    # TEMPORARY: combine the per-arch preview images into one named preview
-    # manifest for end-to-end validation. Revert before merge.
-    manifestStepPreview = manifest_preview("manifest-preview", platforms, preview_tag)
-    manifestStepPreview = set_when(manifestStepPreview, {"event": ["push"]})
-    manifest_pipeline["steps"].append(manifestStepPreview)
 
     pipelines.append(manifest_pipeline)
 
@@ -166,32 +155,6 @@ def manifest(name, platforms, tag):
         for platform in platforms:
             step["settings"]["manifest"]["sources"].append(get_commit_name(platform))
         step["settings"]["manifest"]["targets"].append(get_commit_name())
-
-    return step
-
-# TEMPORARY: builds a manifest-combine step for a fixed, named preview tag
-# instead of the commit/tag-derived names "manifest" uses. Revert before
-# merge.
-def manifest_preview(name, platforms, preview_tag):
-    imageRepo = "public.ecr.aws/kanopy/buildah-plugin"
-
-    step = {
-        "name": name,
-        "image": imageRepo + ":" + preview_tag + "-arm64",
-        "settings": {
-            "registry": {"from_secret": "ecr_registry"},
-            "repo": "${DRONE_REPO_NAME}",
-            "access_key": {"from_secret": "ecr_access_key"},
-            "secret_key": {"from_secret": "ecr_secret_key"},
-            "manifest": {
-                "sources": [],
-                "targets": [preview_tag],
-            },
-        },
-    }
-
-    for platform in platforms:
-        step["settings"]["manifest"]["sources"].append(preview_tag + "-" + platform)
 
     return step
 
